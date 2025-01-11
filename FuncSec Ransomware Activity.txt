@@ -1,0 +1,48 @@
+title: Detect FunkSec Ransomware Activity via Sysmon
+id:456e7891-d23a-45bc-a78b-123456789abc
+status: experimental
+description: Detects behaviors and indicators associated with FunkSec ransomware, focusing on Sysmon logs for process creation, file hashing, and network connections.
+references:
+  - https://attack.mitre.org/techniques/T1070/ # Indicator Removal on Host
+  - https://attack.mitre.org/techniques/T1562/ # Impair Defenses
+  - https://research.checkpoint.com/2025/funksec-alleged-top-ransomware-group-powered-by-ai/
+author: Pourya Ghasemi
+date: 2025/1/11
+tags:
+  -attack.impact
+  - attack.defense_evasion
+  - attack.t1070
+  - attack.t1562
+  -attack.t1486
+logsource:
+  product: windows
+  service: sysmon
+detection:
+  selection_process_creation:
+    EventID: 1
+    ParentImage:
+      - '*\powershell.exe'
+      - '*\cmd.exe'
+    Image:
+      - '*\dev.exe'
+    CommandLine:
+      - '*vssadmin delete shadows /all /quiet*'
+      - '*Set-MpPreference -DisableRealtimeMonitoring $true*'
+      - '*wevtutil sl Security /e:false*'
+      - '*Set-ExecutionPolicy Bypass -Scope Process -Force*'
+  selection_file_creation:
+    EventID: 15
+    Hashes:
+      - 'SHA256: c233aec7917cf34294c19dd60ff79a6e0fac5ed6f0cb57af98013c08201a7a1c'
+      - 'SHA256: 66dbf939c00b09d8d22c692864b68c4a602e7a59c4b925b2e2bef57b1ad047bd'
+      - 'SHA256: dcf536edd67a98868759f4e72bcbd1f4404c70048a2a3257e77d8af06cb036ac'
+      - 'SHA256: b1ef7b267d887e34bf0242a94b38e7dc9fd5e6f8b2c5c440ce4ec98cc74642fb'
+      - 'SHA256: 5226ea8e0f516565ba825a1bbed10020982c16414750237068b602c5b4ac6abd'
+      - 'SHA256: e622f3b743c7fc0a011b07a2e656aa2b5e50a4876721bcf1f405d582ca4cda22'
+      - 'SHA256: 20ed21bfdb7aa970b12e7368eba8e26a711752f1cc5416b6fd6629d0e2a44e5d'
+      - 'SHA256: dd15ce869aa79884753e3baad19b0437075202be86268b84f3ec2303e1ecd966'
+      - 'SHA256: 7e223a685d5324491bcacf3127869f9f3ec5d5100c5e7cb5af45a227e6ab4603'
+  condition: suspicious_processes or suspicious_hashes
+falsepositives:
+  - Legitimate administrative activity
+level: high
